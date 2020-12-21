@@ -10,6 +10,7 @@ export function isSelectionBackwards(selection) {
   }
 
   const range = selection.getRangeAt(0);
+  // Does not work in iOS because these two nodes are never equal.
   return range.startContainer === selection.focusNode;
 }
 
