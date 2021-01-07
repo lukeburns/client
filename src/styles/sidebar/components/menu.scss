@@ -11,8 +11,7 @@
 
 // Toggle button that opens the menu.
 .menu__toggle {
-  @include buttons.button--icon-only;
-
+  @include buttons.button--icon-only(true, inherit);
   appearance: none;
   background: none;
   padding: 0;
