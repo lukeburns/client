@@ -172,6 +172,7 @@ export function bootHypothesisClient(doc, config) {
 
     // Main entry point for the client
     'scripts/annotator.bundle.js',
+    'scripts/audio.js',
 
     'styles/annotator.css',
     'styles/pdfjs-overrides.css',

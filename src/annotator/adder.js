@@ -62,6 +62,8 @@ function nearestPositionedAncestor(el) {
 /**
  * @typedef AdderOptions
  * @prop {() => any} onAnnotate - Callback invoked when "Annotate" button is clicked
+ * @prop {() => any} onRecord - Callback invoked when "Record" button is clicked
+ * @prop {() => any} onStopRecord - Callback invoked when "Stop Recording" button is clicked
  * @prop {() => any} onHighlight - Callback invoked when "Highlight" button is clicked
  * @prop {(annotations: Object[]) => any} onShowAnnotations -
  *   Callback invoked when  "Show" button is clicked
@@ -83,7 +85,7 @@ export class Adder {
    * The adder is initially hidden.
    *
    * @param {HTMLElement} container - The DOM element into which the adder will be created
-   * @param {AdderOptions} options - Options object specifying `onAnnotate` and `onHighlight`
+   * @param {AdderOptions} options - Options object specifying `onAnnotate`, `onRecord`, `onStopRecord`, and `onHighlight`
    *        event handlers.
    */
   constructor(container, options) {
@@ -117,6 +119,8 @@ export class Adder {
     this._arrowDirection = 'up';
 
     this._onAnnotate = options.onAnnotate;
+    this._onRecord = options.onRecord;
+    this._onStopRecord = options.onStopRecord;
     this._onHighlight = options.onHighlight;
     this._onShowAnnotations = options.onShowAnnotations;
 
@@ -158,6 +162,22 @@ export class Adder {
     this._isVisible = true;
     this._arrowDirection = arrowDirection === ARROW_POINTING_UP ? 'up' : 'down';
 
+    this._render();
+  }
+
+  /**
+   * Show recording icon. Hide annotation and highlight icons.
+   */
+  startRecording() {
+    this._recording = true;
+    this._render();
+  }
+
+  /**
+   * Remove recording indicator and show icons.
+   */
+  stopRecording() {
+    this._recording = false;
     this._render();
   }
 
@@ -305,6 +325,12 @@ export class Adder {
           this._onAnnotate();
           this.hide();
           break;
+        case 'record': 
+          this._onRecord();
+          break; 
+        case 'stop-record': 
+          this._onStopRecord();
+          break; 
         case 'highlight':
           this._onHighlight();
           this.hide();
@@ -321,6 +347,7 @@ export class Adder {
       <AdderToolbar
         isVisible={this._isVisible}
         arrowDirection={this._arrowDirection}
+        recording={this._recording}
         onCommand={handleCommand}
         annotationCount={this.annotationsForSelection.length}
       />,

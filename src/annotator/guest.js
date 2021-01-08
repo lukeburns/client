@@ -122,6 +122,7 @@ export default class Guest extends Delegator {
 
     /** @type {ToolbarController|null} */
     this.toolbar = null;
+    this.recorder = null;
 
     this.adderToolbar = document.createElement('hypothesis-adder');
     this.adderToolbar.style.display = 'none';
@@ -131,6 +132,13 @@ export default class Guest extends Delegator {
       onAnnotate: () => {
         this.createAnnotation();
         /** @type {Selection} */ (document.getSelection()).removeAllRanges();
+      },
+      onRecord: () => {
+        window.audio_service.authorize().then(() => this.startRecording())
+      },
+      onStopRecord: () => {
+        this.stopRecording();
+        // /** @type {Selection} */ (document.getSelection()).removeAllRanges();
       },
       onHighlight: () => {
         this.setVisibleHighlights(true);
@@ -596,6 +604,63 @@ export default class Guest extends Delegator {
   }
 
   /**
+   * Create a new audio annotation.
+   *
+   */
+  startRecording() {
+    var self = this;
+    navigator.mediaDevices.getUserMedia({
+      video: false,
+      audio: true,
+    }).then(stream => {
+      const chunks = [];
+      const recorder = new MediaRecorder(stream);
+      const preventDefault = e => {
+        e.preventDefault()
+        e.stopPropagation()
+        return false
+      }
+      document.addEventListener('mousedown', preventDefault)
+      recorder.ondataavailable = e => chunks.push(e.data);
+      recorder.onstop = () => {
+        document.removeEventListener('mousedown', preventDefault);
+        self.adderCtrl.stopRecording();
+        self.adderCtrl.hide();
+        self.crossframe?.call('showSidebar');
+        stream.getAudioTracks()[0].stop();
+        const blob = new Blob(chunks, { type: 'audio/ogg; codecs=opus' });
+        window.audio_service.upload(blob)
+          .then(url => this.createAnnotation({ text: url }))
+          .catch(error => console.error(`Error Uploading: ${error}`));
+        self.recorder = null;
+      }
+      self.recorder = recorder;
+      self.adderCtrl.startRecording();
+      self.resetToolbar()
+      recorder.start();
+      return recorder;
+    })
+  }
+
+  /**
+   * Stop recording
+   */
+  stopRecording() {
+    this.recorder.stop();
+  }
+
+  /**
+   * Reset toolbar.
+   */
+  resetToolbar () {
+    const selection = window.getSelection()
+    if (selection.rangeCount > 0) {
+      const range = selection.getRangeAt(0);
+      this._onSelection(range);
+    }
+  }
+
+  /**
    * Create a new annotation with the `$highlight` flag set.
    *
    * This flag indicates that the sidebar should save the new annotation
@@ -664,6 +729,7 @@ export default class Guest extends Delegator {
   }
 
   _onClearSelection() {
+    if (self.recorder) return
     this.adderCtrl.hide();
     this.selectedRanges = [];
     if (this.toolbar) {

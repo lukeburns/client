@@ -88,6 +88,27 @@ $adder-transition-duration: 80ms;
   line-height: var.$annotator-adder-line-height;
   padding: var.$layout-space--small;
   transition: color $adder-transition-duration;
+  position: relative;
+
+  &.no-display {
+    display: none;
+  }
+
+  &__recording {
+    display: none;
+    position: absolute;
+    top: 6px;
+    left: 13px;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: #d02e67;
+    animation: adder-recording 1.5s infinite;
+  }
+
+  &.active &__recording {
+    display: block;
+  }
 
   &__label {
     margin-top: var.$layout-space--xxsmall;
@@ -152,5 +173,20 @@ $adder-transition-duration: 80ms;
   }
   to {
     transform: scale(1) translateY(0px);
+  }
+}
+
+@keyframes adder-recording {
+  0% {
+    opacity: 0;
+  }
+  60% {
+    opacity: 1;
+  }
+  85% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
   }
 }

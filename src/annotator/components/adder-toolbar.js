@@ -13,18 +13,18 @@ import SvgIcon from '../../shared/components/svg-icon';
  *  @param {() => any} props.onClick
  *  @param {string|null} props.shortcut
  */
-function ToolbarButton({ badgeCount, icon, label, onClick, shortcut }) {
+function ToolbarButton({ badgeCount, icon, label, onClick, shortcut, active, noDisplay }) {
   useShortcut(shortcut, onClick);
 
   const title = shortcut ? `${label} (${shortcut})` : label;
-
   return (
     <button
-      className="annotator-adder-button"
+      className={`annotator-adder-button${active ? ' active' : ''}${noDisplay ? ' no-display' : ''}`}
       onClick={onClick}
       aria-label={title}
       title={title}
     >
+      <div class="annotator-adder-button__recording"></div>
       {icon && <SvgIcon name={icon} className="annotator-adder-button__icon" />}
       {typeof badgeCount === 'number' && (
         <span className="annotator-adder-button__badge">{badgeCount}</span>
@@ -45,7 +45,7 @@ ToolbarButton.propTypes = {
 /**
  * Union of possible toolbar commands.
  *
- * @typedef {'annotate'|'highlight'|'show'} Command
+ * @typedef {'annotate'|'record'|'highlight'|'show'} Command
  */
 
 /**
@@ -71,6 +71,7 @@ ToolbarButton.propTypes = {
 export default function AdderToolbar({
   arrowDirection,
   isVisible,
+  recording,
   onCommand,
   annotationCount = 0,
 }) {
@@ -78,13 +79,14 @@ export default function AdderToolbar({
     event.preventDefault();
     event.stopPropagation();
 
-    onCommand(command);
+    return onCommand(command);
   };
 
   // Since the selection toolbar is only shown when there is a selection
   // of static text, we can use a plain key without any modifier as
   // the shortcut. This avoids conflicts with browser/OS shortcuts.
   const annotateShortcut = isVisible ? 'a' : null;
+  const recordShortcut = isVisible ? 'r' : null;
   const highlightShortcut = isVisible ? 'h' : null;
   const showShortcut = isVisible ? 's' : null;
 
@@ -105,12 +107,21 @@ export default function AdderToolbar({
         <ToolbarButton
           icon="annotate"
           onClick={e => handleCommand(e, 'annotate')}
+          noDisplay={recording}
           label="Annotate"
           shortcut={annotateShortcut}
         />
         <ToolbarButton
+          icon="record"
+          onClick={e => handleCommand(e, recording ? 'stop-record' : 'record')}
+          label={recording ? "Save" : "Record"}
+          shortcut={recordShortcut}
+          active={recording}
+        />
+        <ToolbarButton
           icon="highlight"
           onClick={e => handleCommand(e, 'highlight')}
+          noDisplay={recording}
           label="Highlight"
           shortcut={highlightShortcut}
         />
